@@ -1,4 +1,4 @@
-
+<!--Problem verbleibend: nach dem Absenden der neuen Daten: Es steht da "User edited", aber in der Datenbank keine Änderung; "Notice: Trying to get property of non-object in C:\xampp\htdocs\i217w_boox\edit_user.php on line 48"-->
 <?php
 
 require('config.php');
@@ -10,16 +10,18 @@ if(isset($_POST['username']) && $_POST['password'] && $_POST['email']){
   $password = $_POST['password'];
   $email = $_POST['email'];
 
-  $stmt = "INSERT INTO `user` (`id`, `username`, `password`, `email`) VALUES (NULL, '" . $name . "', '" . $password . "', '" . $email ."');";
+  if (isset($_GET['editID'])){
+  $userID = $_GET['editID'];
+  $stmt = "UPDATE `user` SET `username` = '" . $name . "', `password` = '" . $password . "', `email` = '" . $email ."' WHERE `user`.`id` = ". $userID;
   $result = $link->query($stmt);
 
-  $status = ">> User added";
-
+  $status = ">> User edited";
+  }
 }
 else {
-  $status = ">> noch nichts gesendet";
+  $status = ">> Nothing edited yet";
 }
-/* !!! funktioniert nicht. Überprüfung in Zeile 8, jedoch ohne Ausgabe, welches Feld leer ist bzw was das Pronlem war. !!!
+/*
 if(empty($name)) {
 echo 'Username must not be empty';
         die;
@@ -31,8 +33,30 @@ echo 'Password must not be empty';
 if(empty($email)) {
 echo 'E-Mail must not be empty';
         die;
+} */
+if (isset($_GET['editID'])){
+	$userID = $_GET['editID'];
+
+	$stmt = "SELECT * FROM `user` WHERE `id` = ".$userID;
+	$result = $link->query($stmt);
+
+	$id = "";
+	$username = "";
+	$password = "";
+	$email = "";
+
+	if ($result->num_rows > 0){
+		while ($row = mysqli_fetch_row($result)){
+			$id = $row[0];
+			$username = $row[1];
+			$password = $row[2];
+			$email = $row[3];
+		}
+	}
 }
-*/
+else {
+	die("NO ID PROVIDED");
+}
 ?>
 <!doctype html>
 <html lang="de">
@@ -47,8 +71,8 @@ echo 'E-Mail must not be empty';
 <body>
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
-          <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
-            <h1>Add User</h1>
+          <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>?editID=<?php $userID?>">
+            <h1>Edit User</h1>
 			<h2><?php echo $status ?></h2>
             <div class="form-group">
               <input type="text" placeholder="Username" class="form-control" id="username" name="username">
@@ -57,9 +81,9 @@ echo 'E-Mail must not be empty';
               <input type="password" placeholder="Password" class="form-control" id="password" name="password">
             </div>
             <div class="form-group">
-              <input type="text" placeholder="E-Mail" class="form-control" id="email" name="email">
+              <input type="text" placeholder="E-mail" class="form-control" id="email" name="email">
             </div>
-            <button type="submit" class="btn btn-default" name="btn-save">Add User</button>
+            <button type="submit" class="btn btn-default" name="btn-save">Edit User</button>
 
           </form>
 

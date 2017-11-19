@@ -1,3 +1,4 @@
+<!--nach Ändern der Daten: keine Änderung in Datenbank. Ebenfalls: Trying to get property of non-object in C:\xampp\htdocs\i217w_boox\edit_user.php on line 55" Wie kann ich das vemreiden bzw. Seite wieder zum Index zurückschicken?-->
 
 <?php
 require('config.php');
@@ -10,14 +11,16 @@ if(isset($_POST['title']) && $_POST['author'] && $_POST['ISBN'] && $_POST['price
   $ISBN = $_POST['ISBN'];
   $price = $_POST['price'];
 
-  $stmt = "INSERT INTO `books` (`title`, `author`, `ISBN`, `price`) VALUES ('" . $title . "', '" . $author . "', '" . $ISBN ."', '". $price ."');";
+  if (isset($_GET['editBook'])){
+  $bookID = $_GET['editBook'];
+  $stmt = "UPDATE `books` SET `title` = '" . $title . "', `author` = '" . $author . "', `ISBN` = '" . $ISBN ."' WHERE `books`.`id` = ". $bookID;
   $result = $link->query($stmt);
 
-  $status = ">> Book added";
-
+  $status = ">> Book edited";
+  }
 }
 else {
-  $status = ">> noch nichts gesendet";
+  $status = ">> Nothing edited yet";
 }
 /* !!! funktioniert nicht. Überprüfung in Zeile 7, jedoch ohne Ausgabe, welches Feld leer ist bzw was das Pronlem war. !!!
 if(empty($author)) {
@@ -37,6 +40,31 @@ echo 'Price must not be empty';
         die;
 }
 */
+if (isset($_GET['editBook'])){
+	$bookID = $_GET['editBook'];
+
+	$stmt = "SELECT * FROM `user` WHERE `id` = ".$bookID;
+	$result = $link->query($stmt);
+
+	$id = "";
+	$title = "";
+	$author = "";
+	$ISBN = "";
+  $price = "";
+
+	if ($result->num_rows > 0){
+		while ($row = mysqli_fetch_row($result)){
+			$id = $row[0];
+			$title = $row[1];
+			$author = $row[2];
+			$ISBN = $row[3];
+      $price = $row[4];
+		}
+	}
+}
+else {
+	die("NO ID PROVIDED");
+}
 ?>
 <!doctype html>
 <html lang="de">
@@ -51,8 +79,8 @@ echo 'Price must not be empty';
 <body>
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
-          <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
-            <h1>Add Book</h1>
+          <form method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>?editBook=<?php $bookID?>">
+            <h1>Edit Book</h1>
 			<h2><?php echo $status ?></h2>
             <div class="form-group">
               <input type="text" placeholder="Title" class="form-control" id="title" name="title">
@@ -66,7 +94,7 @@ echo 'Price must not be empty';
             <div class="form-group">
               <input type="text" placeholder="Price" class="form-control" id="price" name="price">
             </div>
-            <button type="submit" class="btn btn-default" name="btn-save">Add Book</button>
+            <button type="submit" class="btn btn-default" name="btn-save">Edit Book</button>
 
           </form>
 
